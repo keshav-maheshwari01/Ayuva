@@ -36,3 +36,19 @@ data (family history, lab values) rather than further tuning.
 Recall was prioritized as the primary metric (over raw accuracy) because 
 false negatives — missing a real at-risk patient — are the most dangerous 
 failure mode for a health-screening tool, per AYUVA's core safety principles.
+
+
+
+## Known Limitation: Sparse Coverage for Atypical Age/Feature Combinations
+
+Testing revealed the model has zero training examples for patients under 25 
+with cholesterol level 3 (well above normal). Predictions for such 
+underrepresented combinations should be treated as low-confidence 
+extrapolation, not reliable risk assessment. This reflects a broader dataset 
+characteristic — checkup-based data likely skews toward middle-aged and older 
+patients, since routine cardiovascular screening is less common in younger 
+populations.
+
+Mitigation for future iterations: (1) source a more age-diverse dataset, 
+(2) implement an out-of-distribution detection flag at prediction time to 
+warn when input falls outside well-represented training regions.
