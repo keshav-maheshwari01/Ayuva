@@ -1,5 +1,10 @@
-pandas 
-numpy
-matplotlib
-seaborn
+fastapi
+uvicorn
+pydantic
+joblib
 scikit-learn
+xgboost
+shap
+sqlalchemy
+psycopg2-binary
+python-dotenv
