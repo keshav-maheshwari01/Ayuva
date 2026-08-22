@@ -130,7 +130,40 @@ def visit(visit : VisitCreate):
         "message": "Visit recorded successfully"}
 
 
-   
+
+
+@app.get("/patients/{patient_id}/visits")
+def get_patient_visits(patient_id:int):
+    db = Sessionmaker()
+    visits = db.query(Visit).filter(Visit.patient_id==patient_id).all()
+    db.close()
+    return visits
+
+
+
+@app.get("/patients")
+def get_all_patients():
+    db = Sessionmaker()
+    patients = db.query(Patient).all()
+    db.close()
+    return patients
+
+
+@app.get("/predictions/{visit_id}")
+
+def get_prediction(visit_id : int):
+    db = Sessionmaker()
+    prediction = db.query(Predictions).filter(Predictions.visit_id == visit_id).first()
+    db.close()
+    return prediction
+
+
+
+
+
+
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "model_loaded": model is not None}
