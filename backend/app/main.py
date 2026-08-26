@@ -3,7 +3,13 @@ from pydantic import BaseModel,Field
 import json 
 import joblib
 from app.database import Sessionmaker
-from app.model import Predictions , Patient,Visit
+from app.model import Predictions , Patient,Visit,User
+from app.auth import hashing ,verify_password  , create_access_token
+
+
+
+import os 
+
 
 app = FastAPI()
 
@@ -43,6 +49,20 @@ class VisitCreate(PatientVitals,BaseModel):
 
 class PredictRequest(BaseModel):
     visit_id : int
+
+
+
+
+class UserSignup(BaseModel):
+    name : str 
+    username : str 
+    password : str 
+    role : str 
+
+class UserLogin(BaseModel):
+    username :str
+    password : str 
+
 
 @app.get("/")
 def root():
@@ -167,3 +187,61 @@ def get_prediction(visit_id : int):
 @app.get("/health")
 def health():
     return {"status": "ok", "model_loaded": model is not None}
+
+
+
+
+
+@app.post("/signup")
+def signup(user : UserSignup) : 
+    db = Sessionmaker()
+    existing = db.query(User).filter(User.username == user.username ).first()
+    if existing :
+        db.close()
+        return {"error": "Username already taken"}
+
+
+    new_user = User(
+        name = user.name,
+        username = user.username,
+        password_hash = hashing(user.password),
+        role = user.role
+
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    db.close()
+
+
+    return {"id": new_user.id, "username": new_user.username, "role": new_user.role}
+
+
+        
+
+
+
+
+@app.post("/login")
+def login (credentials : UserLogin):
+    db = Sessionmaker()
+    user = db.query(User).filter(User.username == credentials.username).first()
+    db.close()
+
+    if user is None : 
+        return {"error": "Invalid username or password"}
+
+    if not verify_password(credentials.password, user.password_hash):
+        return {"error": "Invalid username or password"}
+
+    token = create_access_token(data = {"user_id" : user.id , "role" : user.role})
+
+
+    return {
+        "access_token" : token , 
+        "token_type": "bearer",
+        "role"  : user.role
+    }
+
+
